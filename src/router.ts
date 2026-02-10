@@ -1,0 +1,44 @@
+import { getBerry } from './handlers/getBerry';
+import { getLeaderboard } from './handlers/getLeaderboard';
+import { giveBerry } from './handlers/giveBerry';
+import { removeBerry } from './handlers/removeBerry';
+import { errorResponse } from './utils/response';
+
+export async function handleRequest(request: Request, env: { berrygames_db: D1Database }) {
+	const url = new URL(request.url);
+	const path = url.pathname;
+	const method = request.method;
+
+	try {
+		// GET /berry/:userId?guildId=xxx
+		if (method === 'GET' && path.startsWith('/berry/')) {
+			const userId = path.split('/')[2];
+			const guildId = url.searchParams.get('guildId');
+			return await getBerry(userId, guildId!, env.berrygames_db);
+		}
+
+		// POST /berry/give
+		if (method === 'POST' && path === '/berry/give') {
+			const body = (await request.json()) as any;
+			return await giveBerry(body, env.berrygames_db);
+		}
+
+		// POST /berry/remove
+		if (method === 'POST' && path === '/berry/remove') {
+			const body = (await request.json()) as any;
+			return await removeBerry(body, env.berrygames_db);
+		}
+
+		// GET /berry/leaderboard?guildId=xxx&limit=10
+		if (method === 'GET' && path === '/berry/leaderboard') {
+			const guildId = url.searchParams.get('guildId');
+			const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+			return await getLeaderboard(guildId!, limit, env.berrygames_db);
+		}
+
+		return errorResponse('Not found', 404);
+	} catch (e) {
+		console.error(e);
+		return errorResponse('Internal server error', 500);
+	}
+}
