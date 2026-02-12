@@ -8,11 +8,14 @@ export async function getLeaderboard(guildId: string, limit: number, db: D1Datab
 
 	const prisma = getDB(db);
 
-	const leaderboard = await prisma.userBerries.findMany({
-		where: { guildId },
-		orderBy: { count: 'desc' },
-		take: limit,
-	});
+	const leaderboard = await prisma.$queryRaw`
+		SELECT *,
+				(countCash + countBank) AS total
+		FROM UserBerries
+		WHERE guildId = ${guildId}
+		ORDER BY total DESC
+		LIMIT ${limit}
+	`;
 
 	return jsonResponse({ leaderboard });
 }

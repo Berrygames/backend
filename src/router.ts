@@ -5,6 +5,8 @@ import { removeBerry } from './endpoints/removeBerry';
 import { errorResponse } from './utils/response';
 import roleIncome from './endpoints/roleIncome';
 import collect from './endpoints/collect';
+import withdraw from './endpoints/withdraw';
+import deposit from './endpoints/deposit';
 
 export async function handleRequest(request: Request, env: { berrygames_db: D1Database }) {
 	const url = new URL(request.url);
@@ -12,6 +14,17 @@ export async function handleRequest(request: Request, env: { berrygames_db: D1Da
 	const method = request.method;
 
 	try {
+		// POST /berry/withdraw
+		if (method === 'POST' && path === '/berry/withdraw') {
+			const body = (await request.json()) as any;
+			return await withdraw(body, env.berrygames_db);
+		}
+
+		if (method === 'POST' && path === '/berry/deposit') {
+			const body = (await request.json()) as any;
+			return await deposit(body, env.berrygames_db);
+		}
+
 		// POST /berry/collect
 		if (method === 'POST' && path === '/berry/collect') {
 			const body = (await request.json()) as any;
@@ -58,7 +71,7 @@ export async function handleRequest(request: Request, env: { berrygames_db: D1Da
 		if (method === 'GET' && path.startsWith('/berry/')) {
 			const userId = path.split('/')[2];
 			const guildId = url.searchParams.get('guildId');
-			return await getBerry(userId, guildId!, env.berrygames_db);
+			return await getBerry(userId!, guildId!, env.berrygames_db);
 		}
 		return errorResponse('Not found', 404);
 	} catch (e) {

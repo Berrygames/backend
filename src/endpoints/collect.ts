@@ -66,12 +66,12 @@ export default async function collect(body: CollectBody, db: D1Database) {
 				},
 			},
 			update: {
-				count: { increment: role.amount },
+				countCash: { increment: role.amount },
 			},
 			create: {
 				userId,
 				guildId,
-				count: role.amount,
+				countCash: role.amount,
 			},
 		});
 
@@ -100,7 +100,7 @@ export default async function collect(body: CollectBody, db: D1Database) {
 		return jsonResponse({
 			success: true,
 			amount: role.amount,
-			newCount: user.count,
+			newCount: user.countCash,
 			nextCollectionAt: new Date(now.getTime() + cooldownMs).toISOString(),
 			nextCollectionTimestamp: `<t:${Math.floor((now.getTime() + cooldownMs) / 1000)}:R>`,
 		});

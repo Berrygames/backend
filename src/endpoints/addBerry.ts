@@ -4,15 +4,21 @@ import { errorResponse, jsonResponse } from '../utils/response';
 interface GiveBerryBody {
 	toUserId?: string;
 	guildId?: string;
+	location?: 'cash' | 'bank';
 	amount?: number;
 }
 
 export async function addBerry(body: GiveBerryBody, db: D1Database) {
-	const { toUserId, guildId, amount } = body;
+	const { toUserId, guildId, location, amount } = body;
 
-	if (!toUserId || !guildId || !amount) {
-		return errorResponse('Missing toUserId, guildId, or amount');
+	if (!toUserId || !guildId || !location || !amount) {
+		return errorResponse('Missing toUserId, guildId, location, or amount');
 	}
+
+	const locationMap = {
+		cash: 'countCash',
+		bank: 'countBank',
+	} as const;
 
 	const prisma = getDB(db);
 
@@ -24,18 +30,19 @@ export async function addBerry(body: GiveBerryBody, db: D1Database) {
 			},
 		},
 		update: {
-			count: { increment: amount },
+			[locationMap[location]]: { increment: amount },
 		},
 		create: {
 			userId: toUserId,
 			guildId,
-			count: amount,
+			countCash: amount,
 		},
 	});
 
 	return jsonResponse({
 		success: true,
 		userId: toUserId,
-		newCount: user.count,
+		newCount: user[locationMap[location]],
+		location,
 	});
 }

@@ -18,8 +18,10 @@ export async function getBerry(userId: string, guildId: string, db: D1Database) 
 	});
 
 	return jsonResponse({
+		success: true,
 		userId: user?.userId,
 		guildId: user?.guildId,
-		berries: user?.count || 0,
+		berriesCash: user?.countCash || 0,
+		berriesBank: user?.countBank || 0,
 	});
 }
