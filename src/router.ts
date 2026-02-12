@@ -4,6 +4,7 @@ import { addBerry } from './endpoints/addBerry';
 import { removeBerry } from './endpoints/removeBerry';
 import { errorResponse } from './utils/response';
 import roleIncome from './endpoints/roleIncome';
+import collect from './endpoints/collect';
 
 export async function handleRequest(request: Request, env: { berrygames_db: D1Database }) {
 	const url = new URL(request.url);
@@ -11,10 +12,26 @@ export async function handleRequest(request: Request, env: { berrygames_db: D1Da
 	const method = request.method;
 
 	try {
+		// POST /berry/collect
+		if (method === 'POST' && path === '/berry/collect') {
+			const body = (await request.json()) as any;
+			return await collect(body, env.berrygames_db);
+		}
+
+		// GET /role/income?guildId=xxx
+		if (method === 'GET' && path.startsWith('/role/income')) {
+			const guildId = url.searchParams.get('guildId');
+			if (!guildId) {
+				return errorResponse('Missing guildId');
+			}
+			const response = await roleIncome({ guildId }, env.berrygames_db, 'GET');
+			return response;
+		}
+
 		// POST /role/income
 		if (method === 'POST' && path === '/role/income') {
 			const body = (await request.json()) as any;
-			return await roleIncome(body, env.berrygames_db);
+			return await roleIncome(body, env.berrygames_db, 'POST');
 		}
 
 		// POST /berry/add
