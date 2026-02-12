@@ -7,7 +7,7 @@ interface GiveBerryBody {
 	amount?: number;
 }
 
-export async function giveBerry(body: GiveBerryBody, db: D1Database) {
+export async function addBerry(body: GiveBerryBody, db: D1Database) {
 	const { toUserId, guildId, amount } = body;
 
 	if (!toUserId || !guildId || !amount) {
