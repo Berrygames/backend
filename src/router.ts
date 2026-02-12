@@ -1,8 +1,9 @@
-import { getBerry } from './handlers/getBerry';
-import { getLeaderboard } from './handlers/getLeaderboard';
-import { addBerry } from './handlers/addBerry';
-import { removeBerry } from './handlers/removeBerry';
+import { getBerry } from './endpoints/getBerry';
+import { getLeaderboard } from './endpoints/getLeaderboard';
+import { addBerry } from './endpoints/addBerry';
+import { removeBerry } from './endpoints/removeBerry';
 import { errorResponse } from './utils/response';
+import roleIncome from './endpoints/roleIncome';
 
 export async function handleRequest(request: Request, env: { berrygames_db: D1Database }) {
 	const url = new URL(request.url);
@@ -10,6 +11,12 @@ export async function handleRequest(request: Request, env: { berrygames_db: D1Da
 	const method = request.method;
 
 	try {
+		// POST /role/income
+		if (method === 'POST' && path === '/role/income') {
+			const body = (await request.json()) as any;
+			return await roleIncome(body, env.berrygames_db);
+		}
+
 		// POST /berry/add
 		if (method === 'POST' && path === '/berry/add') {
 			const body = (await request.json()) as any;
@@ -26,7 +33,6 @@ export async function handleRequest(request: Request, env: { berrygames_db: D1Da
 		if (method === 'GET' && path === '/berry/leaderboard') {
 			const guildId = url.searchParams.get('guildId');
 			const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-
 			const response = await getLeaderboard(guildId!, limit, env.berrygames_db);
 			return response;
 		}

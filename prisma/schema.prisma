@@ -17,3 +17,16 @@ model UserBerries {
   @@unique([userId, guildId])
   @@index([guildId])
 }
+
+model Role {
+  id        String   @id @default(uuid())
+  roleId    String   
+  guildId   String 
+  amount    Int      @default(0) // Berry amount awarded for having this role
+  interval  Int     @default(0) // Interval in hours for awarding berries (0 means no interval)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roleId, guildId])
+  @@index([guildId])
+}

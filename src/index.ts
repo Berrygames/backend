@@ -6,7 +6,7 @@ export interface Env {
 }
 
 export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
+	async fetch(request: Request, env: Env): Promise<any> {
 		return handleRequest(request, env);
 	},
 };

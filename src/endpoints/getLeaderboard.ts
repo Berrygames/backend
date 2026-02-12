@@ -14,7 +14,5 @@ export async function getLeaderboard(guildId: string, limit: number, db: D1Datab
 		take: limit,
 	});
 
-	console.log('Fetched leaderboard:', leaderboard); // Log the fetched leaderboard for debugging
-
 	return jsonResponse({ leaderboard });
 }
