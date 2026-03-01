@@ -8,74 +8,70 @@ import collect from './endpoints/collect';
 import withdraw from './endpoints/withdraw';
 import deposit from './endpoints/deposit';
 
-export async function handleRequest(request: Request, env: { berrygames_db: D1Database }) {
-	const url = new URL(request.url);
-	const path = url.pathname;
-	const method = request.method;
+type Env = { berrygames_db: D1Database };
+type Handler = (request: Request, url: URL, env: Env) => Promise<Response>;
 
-	try {
-		// POST /berry/withdraw
-		if (method === 'POST' && path === '/berry/withdraw') {
-			const body = (await request.json()) as any;
-			return await withdraw(body, env.berrygames_db);
-		}
+const json = (req: Request) => req.json() as Promise<any>;
 
-		if (method === 'POST' && path === '/berry/deposit') {
-			const body = (await request.json()) as any;
-			return await deposit(body, env.berrygames_db);
-		}
-
-		// POST /berry/collect
-		if (method === 'POST' && path === '/berry/collect') {
-			const body = (await request.json()) as any;
-			return await collect(body, env.berrygames_db);
-		}
-
-		// GET /role/income?guildId=xxx
-		if (method === 'GET' && path.startsWith('/role/income')) {
+export const routes: { method: string; path: string; handler: Handler }[] = [
+	{
+		method: 'POST',
+		path: '/berry/withdraw',
+		handler: async (req: Request, _, env: Env) => withdraw(await json(req), env.berrygames_db),
+	},
+	{
+		method: 'POST',
+		path: '/berry/deposit',
+		handler: async (req: Request, _, env: Env) => deposit(await json(req), env.berrygames_db),
+	},
+	{
+		method: 'POST',
+		path: '/berry/collect',
+		handler: async (req: Request, _, env: Env) => collect(await json(req), env.berrygames_db),
+	},
+	{
+		method: 'POST',
+		path: '/berry/add',
+		handler: async (req: Request, _, env: Env) => addBerry(await json(req), env.berrygames_db),
+	},
+	{
+		method: 'POST',
+		path: '/berry/remove',
+		handler: async (req: Request, _, env: Env) => removeBerry(await json(req), env.berrygames_db),
+	},
+	{
+		method: 'POST',
+		path: '/role/income',
+		handler: async (req: Request, _, env: Env) => roleIncome(await json(req), env.berrygames_db, 'POST'),
+	},
+	{
+		method: 'GET',
+		path: '/role/income',
+		handler: async (req: Request, url: URL, env: Env) => {
 			const guildId = url.searchParams.get('guildId');
 			if (!guildId) {
 				return errorResponse('Missing guildId');
 			}
-			const response = await roleIncome({ guildId }, env.berrygames_db, 'GET');
-			return response;
-		}
-
-		// POST /role/income
-		if (method === 'POST' && path === '/role/income') {
-			const body = (await request.json()) as any;
-			return await roleIncome(body, env.berrygames_db, 'POST');
-		}
-
-		// POST /berry/add
-		if (method === 'POST' && path === '/berry/add') {
-			const body = (await request.json()) as any;
-			return await addBerry(body, env.berrygames_db);
-		}
-
-		// POST /berry/remove
-		if (method === 'POST' && path === '/berry/remove') {
-			const body = (await request.json()) as any;
-			return await removeBerry(body, env.berrygames_db);
-		}
-
-		// GET /berry/leaderboard?guildId=xxx&limit=10
-		if (method === 'GET' && path === '/berry/leaderboard') {
+			return await roleIncome({ guildId }, env.berrygames_db, 'GET');
+		},
+	},
+	{
+		method: 'GET',
+		path: '/berry/leaderboard',
+		handler: async (_, url, env: Env) => {
 			const guildId = url.searchParams.get('guildId');
 			const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-			const response = await getLeaderboard(guildId!, limit, env.berrygames_db);
-			return response;
-		}
-
-		// GET /berry/:userId?guildId=xxx
-		if (method === 'GET' && path.startsWith('/berry/')) {
-			const userId = path.split('/')[2];
+			return getLeaderboard(guildId!, limit, env.berrygames_db);
+		},
+	},
+	{
+		method: 'GET',
+		path: '/berry',
+		handler: async (_, url: URL, env: Env) => {
+			const userId = url.searchParams.get('userId');
 			const guildId = url.searchParams.get('guildId');
-			return await getBerry(userId!, guildId!, env.berrygames_db);
-		}
-		return errorResponse('Not found', 404);
-	} catch (e) {
-		console.error(e);
-		return errorResponse('Internal server error', 500);
-	}
-}
+			if (!userId) return errorResponse('Missing userId');
+			return getBerry(userId, guildId!, env.berrygames_db);
+		},
+	},
+];
